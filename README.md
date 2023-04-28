@@ -2,7 +2,7 @@
 
 > **Warning**: this is just a proof-of-concept experiment!
 > 
-> Only Linux hosts are supported, only CPU and DRAM consumption is monitored, Gradle's configuration cache is not supported, monitoring starts too late, only the Gradle daemon process is monitored, data is not fed to build scans etc...
+> Only Linux hosts are supported, only CPU and DRAM consumption is monitored, monitoring starts too late, only the Gradle daemon process is monitored, data is not fed to build scans etc...
 > 
 > We could potentially use sampling in order to attribute energy consumption to units of work.
 
