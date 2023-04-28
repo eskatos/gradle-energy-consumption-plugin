@@ -2,7 +2,9 @@
 
 > **Warning**: this is just a proof-of-concept experiment!
 > 
-> Only Linux hosts are supported, only CPU and DRAM consumption is monitored, monitoring starts too late, only the Gradle daemon process is monitored, data is not fed to build scans etc...
+> Only Intel Linux hosts are supported, only CPU and DRAM consumption is monitored, only the Gradle daemon process is monitored, monitoring starts too late...
+>
+> Energy consumption is reported on the console at the end of the build and added as custom values to build scans.
 > 
 > We could potentially use sampling in order to attribute energy consumption to units of work.
 
@@ -47,3 +49,11 @@ plugins {
     id("energy-consumption")
 }
 ```
+
+Publish a build scan to see the attached custom values
+
+```shell
+./gradlew work --scan
+```
+
+https://ge.gradle.org/s/b4fymgqi3rxj4/custom-values#L0-L1

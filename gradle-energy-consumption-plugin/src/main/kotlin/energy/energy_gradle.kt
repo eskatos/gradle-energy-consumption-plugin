@@ -6,8 +6,11 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.api.services.ServiceReference
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.internal.operations.*
+import org.gradle.kotlin.dsl.withGroovyBuilder
 
 
 abstract class EnergyMonitorService : BuildService<BuildServiceParameters.None>,
@@ -27,11 +30,11 @@ abstract class EnergyMonitorService : BuildService<BuildServiceParameters.None>,
         logger.info("Energy Monitor STARTED")
     }
 
-    val processConsumedJoules: Double
-        get() = energyMonitor.processConsumedJoules
+    val processConsumedWh: Double
+        get() = energyMonitor.processConsumedJoules / 3600
 
-    val systemConsumedJoules: Double
-        get() = energyMonitor.systemConsumedJoules
+    val systemConsumedWh: Double
+        get() = energyMonitor.systemConsumedJoules / 3600
 
     override fun close() {
         logger.info("Energy Monitor STOPPED")
@@ -51,19 +54,29 @@ abstract class ReportEnergyConsumption : FlowAction<ReportEnergyConsumption.Para
         @get:Input
         val buildFinished: Property<Unit>
 
+        @get:Optional
         @get:Input
+        val buildScanExtension: Property<Any>
+
+        @get:ServiceReference
         val energyMonitorService: Property<EnergyMonitorService>
     }
 
     override fun execute(parameters: Params) {
         val monitorService = parameters.energyMonitorService.get()
+        val processConsumedWh = monitorService.processConsumedWh
+        val systemConsumedWh = monitorService.systemConsumedWh
+        parameters.buildScanExtension.orNull?.withGroovyBuilder {
+            "value"("PWR_DAEMON_WH", String.format("%.8f", processConsumedWh))
+            "value"("PWR_SYSTEM_WH", String.format("%.8f", systemConsumedWh))
+        }
         EnergyMonitorService.logger.lifecycle(buildString {
             appendLine()
             appendLine("Energy consumption for this build invocation")
             append("  Gradle Daemon ")
-            appendLine(String.format("%.4f Wh", monitorService.processConsumedJoules / 3600).padStart(16))
+            appendLine(String.format("%.4f Wh", processConsumedWh).padStart(16))
             append("  System ")
-            appendLine(String.format("%.4f Wh", monitorService.systemConsumedJoules / 3600).padStart(16 + 7))
+            appendLine(String.format("%.4f Wh", systemConsumedWh).padStart(16 + 7))
         })
     }
 }

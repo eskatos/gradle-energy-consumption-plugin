@@ -7,13 +7,25 @@ val flowScope = serviceOf<FlowScope>()
 val flowProviders = serviceOf<FlowProviders>()
 val buildEventsListenerRegistry = serviceOf<BuildEventListenerRegistryInternal>()
 
-val monitorService = gradle.sharedServices.registerIfAbsent("energyMonitorService", EnergyMonitorService::class) {}
+val monitorServiceProvider = gradle.sharedServices.registerIfAbsent(
+    "energyMonitorService",
+    EnergyMonitorService::class
+) {}
 
-flowScope.always(ReportEnergyConsumption::class) {
-    parameters.apply {
-        energyMonitorService.set(monitorService)
-        buildFinished.set(flowProviders.buildWorkResult.map { })
+buildEventsListenerRegistry.onOperationCompletion(monitorServiceProvider)
+
+gradle.settingsEvaluated {
+    flowScope.always(ReportEnergyConsumption::class) {
+        parameters.buildFinished.set(flowProviders.buildWorkResult.map { })
+        if (pluginManager.hasPlugin("com.gradle.enterprise")) {
+            parameters.buildScanExtension.set(settings.buildScanExtension)
+        }
     }
 }
 
-buildEventsListenerRegistry.onOperationCompletion(monitorService)
+val Settings.buildScanExtension: Any
+    get() = withGroovyBuilder {
+        getProperty("gradleEnterprise").withGroovyBuilder {
+            getProperty("buildScan")
+        }
+    }

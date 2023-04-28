@@ -80,14 +80,13 @@ private class LinuxEnergy {
                 }
             }
         }
-    }.also {
-        LOGGER.info("RAPL sources: ${it.joinToString(", ")}")
     }
 
     init {
         require(raplSources.isNotEmpty()) {
             "No readable RAPL source found, check permissions of $RAPL_PSYS, $RAPL_PKG and $RAPL_DRAM"
         }
+        LOGGER.info("RAPL sources: ${raplSources.joinToString(", ")}")
     }
 
     fun cpuConsumedJoules(): Double {
